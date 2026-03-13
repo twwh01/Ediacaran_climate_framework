@@ -225,11 +225,11 @@ data_table_1 <- data_tables_1_4 %>%
   dplyr::group_by(compilation) %>%
   dplyr::summarise(
     `Unique deposits` = n_distinct(deposit_name, na.rm = TRUE),
-    `Gaskiers^a` = n_distinct(deposit_name[glaciation == "Gaskiers"], na.rm = TRUE),
-    `Fauquier^b` = n_distinct(deposit_name[glaciation == "Fauquier"], na.rm = TRUE),
-    `Bou Azzer^c` = n_distinct(deposit_name[glaciation == "Bou Azzer"], na.rm = TRUE),
-    `Hankalchough^d` = n_distinct(deposit_name[glaciation == "Hankalchough"], na.rm = TRUE),
-    `GEG^a` = n_distinct(deposit_name[glaciation == "GEG"], na.rm = TRUE),
+    `Gaskiers^1` = n_distinct(deposit_name[glaciation == "Gaskiers"], na.rm = TRUE),
+    `Fauquier^2` = n_distinct(deposit_name[glaciation == "Fauquier"], na.rm = TRUE),
+    `Bou Azzer^3` = n_distinct(deposit_name[glaciation == "Bou Azzer"], na.rm = TRUE),
+    `Hankalchough^4` = n_distinct(deposit_name[glaciation == "Hankalchough"], na.rm = TRUE),
+    `GEG^5` = n_distinct(deposit_name[glaciation == "GEG"], na.rm = TRUE),
     `Other/Uncertain` = n_distinct(deposit_name[glaciation == "uncertain" | is.na(glaciation)], na.rm = FALSE)
   ) %>%
   dplyr::mutate(
