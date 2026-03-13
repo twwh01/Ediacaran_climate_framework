@@ -1,0 +1,7 @@
+.Rproj.user
+# exclude old versions
+old/
+# exclude the (very large) fossil figure
+figures/fig_3*
+# exclude figures not used in the paper
+figures/Fig_S99*
