@@ -1,5 +1,5 @@
 # R script for diversity analyses and subsampling
-# used to make table S3 and plots for figures 5 & S6
+# used to make table S9 and plots for figures 5 & S6
 # LN and TWWH
 
 # clear the decks ----
@@ -63,7 +63,7 @@ source(file = file.path("utils", "ecesd_glaciations_table.R"))
 data_palaeo_wb <- openxlsx2::wb_load(file = infile_palaeo)
 data_palaeo_in <- openxlsx2::wb_to_df(
   file = data_palaeo_wb,
-  sheet = "palaeo_data",
+  sheet = "Table_S4_palaeo_data",
   na.strings = "NA"
 )
 data_palaeo_in <- data_palaeo_in[colSums(!is.na(data_palaeo_in)) > 0]
@@ -250,7 +250,7 @@ for (run in 1:length(runs)) {
   }
   
   ## make output table ----
-  subset_table_s3 <- data.frame(
+  subset_table_s9 <- data.frame(
     age_ma = age.5ma,
     subset = selection, 
     raw_richness_diversity_value = div.5ma,
@@ -268,14 +268,14 @@ for (run in 1:length(runs)) {
     subsampled_Proportional_rate_sd = sd.prop.5ma
   )
   if (run == 1) {
-    data_table_s3 <- subset_table_s3 
+    data_table_s9 <- subset_table_s9 
   } else {
-    data_table_s3 <- rbind(data_table_s3, subset_table_s3)
+    data_table_s9 <- rbind(data_table_s9, subset_table_s9)
   }
 }
 
-data_palaeo_wb$add_worksheet("Table_S3")
-data_palaeo_wb$add_data(sheet = "Table_S3", x = data_table_s3)
+data_palaeo_wb$add_worksheet("Table_S9")
+data_palaeo_wb$add_data(sheet = "Table_S9", x = data_table_s9)
 openxlsx2::wb_save(data_palaeo_wb, file = outfile_palaeo)
 
 
@@ -287,7 +287,7 @@ openxlsx2::wb_save(data_palaeo_wb, file = outfile_palaeo)
 # d. Foote's origination rate (SQS)
 
 ## sort for plot ----
-data_to_plot <- data_table_s3 %>%
+data_to_plot <- data_table_s9 %>%
   tidyr::pivot_longer(cols = starts_with(c("raw", "subsampled")),
                       names_to = c("type", "variable", "Metric", "stat"),
                       names_sep = "_",
@@ -558,13 +558,24 @@ plot_fig5_panel <- (plot_raw_counts + labs(tag = "a")) +
     (plot_Foote_origination + labs(tag = "d"))
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_5_diversity_panel.png"),
     width = 250,
     height = 159,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
+  )
+  print(plot_fig5_panel)
+  dev.off()
+  
+  # pdf
+  pdf(
+    file = file.path(dir_plots, "fig_5_diversity_panel.pdf"),
+    width = 9.84,
+    height = 6.26,
+    bg = "white"
   )
   print(plot_fig5_panel)
   dev.off()
@@ -790,13 +801,24 @@ plot_figS6_panel <- (plot_raw_counts_noSA + labs(tag = "a")) +
   (plot_Foote_origination_noSA + labs(tag = "d"))
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_S6_diversity_panel_noSA.png"),
     width = 250,
     height = 159,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
+  )
+  print(plot_figS6_panel)
+  dev.off()
+  
+  # pdf
+  pdf(
+    file = file.path(dir_plots, "fig_S6_diversity_panel_noSA.pdf"),
+    width = 9.84,
+    height = 6.26,
+    bg = "white",
   )
   print(plot_figS6_panel)
   dev.off()

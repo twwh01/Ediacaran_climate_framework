@@ -27,7 +27,7 @@ library(openxlsx2)
 data_palaeo_wb <- openxlsx2::wb_load(file = infile_palaeo)
 data_palaeo_in <- openxlsx2::wb_to_df(
   file = data_palaeo_wb,
-  sheet = "palaeo_data",
+  sheet = "Table_S4_palaeo_data",
   na.strings = "NA"
 )
 data_palaeo_in <- data_palaeo_in[colSums(!is.na(data_palaeo_in)) > 0]
@@ -117,7 +117,7 @@ simpson_similarity <- function(x, y) {
 }
 
 # calculate similarities ----
-data_table_s2 <- tibble::tibble(
+data_table_s8 <- tibble::tibble(
   "LEIH-MEIH age" = c(
     "565 Ma", 
     "565 Ma", 
@@ -171,8 +171,8 @@ data_table_s2 <- tibble::tibble(
 
 
 # save data ----
-data_palaeo_wb$add_worksheet("Table_S2")
-data_palaeo_wb$add_data(sheet = "Table_S2", x = data_table_s2)
+data_palaeo_wb$add_worksheet("Table_S8")
+data_palaeo_wb$add_data(sheet = "Table_S8", x = data_table_s8)
 openxlsx2::wb_save(data_palaeo_wb, file = outfile_palaeo)
 
 

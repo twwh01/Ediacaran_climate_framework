@@ -37,11 +37,9 @@ source(file = file.path("utils", "custom_themes.R"))
 # load data ----
 data_palaeo_wb <- openxlsx2::wb_load(file = infile_palaeo)
 
-data_palaeo_in <- openxlsx2::wb_to_df(
-  file = data_palaeo_wb,
-  sheet = "palaeo_data",
-  na.strings = "NA"
-)
+data_palaeo_in <- openxlsx2::wb_to_df(file = data_palaeo_wb,
+                                      sheet = "Table_S4_palaeo_data",
+                                      na.strings = "NA")
 data_palaeo_in <- data_palaeo_in[colSums(!is.na(data_palaeo_in)) > 0]
 
 
@@ -52,24 +50,19 @@ data_palaeo_plot <- data_palaeo_in %>%
   # remove assemblages
   # remove Cambrian data for main plots
   dplyr::filter(Rank1_supraphylum != "assemblage",
-                associated_assemblage != "Cambrian"
-                ) %>%
+                associated_assemblage != "Cambrian") %>%
   # make associated_assemblage an ordered factor
-  dplyr::mutate(associated_assemblage = ordered(
-    associated_assemblage,
-    levels = c(
-      NA,
-      "ichnofossil",
-      "Cambrian",
-      "Nama",
-      "White Sea",
-      "Avalon",
-      "Wenghui",
-      "Weng'an",
-      "Lantian",
-      "Ediacaran"
-    )
-  )) %>%
+  dplyr::mutate(associated_assemblage = ordered(associated_assemblage,
+                                                levels = c(NA,
+                                                           "ichnofossil",
+                                                           "Cambrian",
+                                                           "Nama",
+                                                           "White Sea",
+                                                           "Avalon",
+                                                           "Wenghui",
+                                                           "Weng'an",
+                                                           "Lantian",
+                                                           "Ediacaran"))) %>%
   # make taxonomic hierarchy factors ordered from oldest to youngest
   dplyr::mutate(
     plot_age = dplyr::case_when(
@@ -347,6 +340,7 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_S99_rangesT_taxa_waterdepth_assemblage_glac.png"),
     width = 3000,
@@ -446,8 +440,9 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
-    filename = file.path(dir_plots, "fig_99_rangesT_taxa_waterdepth_assemblage_glac_noSA.png"),
+    filename = file.path(dir_plots, "fig_S99_rangesT_taxa_waterdepth_assemblage_glac_noSA.png"),
     width = 3000,
     height = 5000,
     units = "px",
@@ -552,13 +547,24 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_4_rangesT_genera_waterdepth_assemblage_glac.png"),
     width = 159,
     height = 245,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
+  )
+  print(plot_Fig4_genera)
+  dev.off()
+  
+  # pdf
+  pdf(
+    file = file.path(dir_plots, "fig_4_rangesT_genera_waterdepth_assemblage_glac.pdf"),
+    width = 6.26,
+    height = 9.65,
+    bg = "white"
   )
   print(plot_Fig4_genera)
   dev.off()
@@ -661,13 +667,24 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_S5_rangesT_genera_noSA_waterdepth_assemblage_glac.png"),
     width = 159,
     height = 245,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
+  )
+  print(plot_FigS5_genera_noSA)
+  dev.off()
+  
+  # pdf
+  pdf(
+    file = file.path(dir_plots, "fig_S5_rangesT_genera_noSA_waterdepth_assemblage_glac.pdf"),
+    width = 6.26,
+    height = 9.65,
+    bg = "white"
   )
   print(plot_FigS5_genera_noSA)
   dev.off()
@@ -770,13 +787,24 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_S4_rangesT_morpho_waterdepth_assemblage_glac.png"),
     width = 159,
     height = 180,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
+  )
+  print(plot_FigS4_morpho)
+  dev.off()
+  
+  # pdf
+  pdf(
+    file = file.path(dir_plots, "fig_S4_rangesT_morpho_waterdepth_assemblage_glac.pdf"),
+    width = 6.26,
+    height = 7.09,
+    bg = "white"
   )
   print(plot_FigS4_morpho)
   dev.off()
@@ -876,13 +904,14 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
+  # hi-res png
   png(
     filename = file.path(dir_plots, "fig_S99_rangesT_morpho_noSA_waterdepth_assemblage_glac.png"),
     width = 159,
     height = 180,
     units = "mm",
     bg = "white",
-    res = 450
+    res = 1200
   )
   print(plot_FigS7_morpho_noSA)
   dev.off()

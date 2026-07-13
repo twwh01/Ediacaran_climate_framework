@@ -49,22 +49,18 @@ source(file = file.path("utils", "custom_themes.R"))
 
 
 # load data ----
-## deposits data ----
+## deposits dates ----
 data_deposits_wb <- openxlsx2::wb_load(file = infile_deposits)
 
-data_deposits_dates <- openxlsx2::wb_to_df(
-  file = data_deposits_wb,
-  sheet = "csl_age_constraints",
-  na.strings = "NA"
-)
+data_deposits_dates <- openxlsx2::wb_to_df(file = data_deposits_wb,
+                                           sheet = "Table_S2_csl_age_constraints",
+                                           na.strings = "NA")
 data_deposits_dates <- data_deposits_dates[colSums(!is.na(data_deposits_dates)) > 0]
 
 ## scores data ----
-data_deposits_scores <- openxlsx2::wb_to_df(
-  file = data_deposits_wb,
-  sheet = "csl_deposits",
-  na.strings = "NA"
-)
+data_deposits_scores <- openxlsx2::wb_to_df(file = data_deposits_wb,
+                                            sheet = "Table_S1_csl_deposits",
+                                            na.strings = "NA")
 data_deposits_scores <- data_deposits_scores[colSums(!is.na(data_deposits_scores)) > 0]
 
 
@@ -408,109 +404,106 @@ if (isTRUE(plot_show)) {
 }
 
 if (isTRUE(plot_save)) {
-  png(
-    file = file.path(dir_plots, "fig_S1_compilation_glaciation_ranges.png"),
-    width = 158.7,
-    height = 150,
-    units = "mm",
-    bg = "white",
-    res = 600
-  )
+  # hi-res png
+  png(file = file.path(dir_plots, "fig_S1_compilation_glaciation_ranges.png"),
+      width = 158.7,
+      height = 150,
+      units = "mm",
+      bg = "white",
+      res = 1200)
+  print(plot_figS1_compilation_glaciations)
+  dev.off()
+  
+  # pdf
+  pdf(file = file.path(dir_plots, "fig_S1_compilation_glaciation_ranges.pdf"),
+      width = 6.25, # in inches
+      height = 5.91,
+      bg = "white")
   print(plot_figS1_compilation_glaciations)
   dev.off()
 }
 
 ## plot Figure 1 deposits by compilation score and glaciation ----
 plot_fig1_compilation_deposits <- data_compilations_plot %>%
-  dplyr::mutate(
-    glaciation = dplyr::case_when(glaciation == "All" ~ "uncertain", .default = glaciation),
-    glaciation = ordered(
-      glaciation,
-      levels = c(
-        "TEGH",
-        "LEIH",
-        "MEIH",
-        "Hankalchough",
-        "Bou Azzer",
-        "Fauquier",
-        "Gaskiers",
-        "GEG",
-        "uncertain",
-        "not Ediacaran"
-      )
-    ),
-    likely_interval = fct_rev(ordered(likely_interval,
-      levels = c(NA, "Cambrian", "Cryogenian", "uncertain", "Ediacaran", "MEIH", "LEIH", "TEGH")
-    )),
-    pattern_spacing = case_when(
-      deposit_score_WH01 > 2 ~ ">2 star",
-      .default = "≤2 star"
-    )
-  ) %>%
+  dplyr::mutate(glaciation = dplyr::case_when(glaciation == "All" ~ "uncertain", .default = glaciation),
+                glaciation = ordered(glaciation,
+                                     levels = c("TEGH",
+                                                "LEIH",
+                                                "MEIH",
+                                                "Hankalchough",
+                                                "Bou Azzer",
+                                                "Fauquier",
+                                                "Gaskiers",
+                                                "GEG",
+                                                "uncertain",
+                                                "not Ediacaran")),
+                likely_interval = fct_rev(ordered(likely_interval,
+                                                  levels = c(NA, 
+                                                             "Cambrian", 
+                                                             "Cryogenian", 
+                                                             "uncertain",
+                                                             "Ediacaran",
+                                                             "MEIH",
+                                                             "LEIH",
+                                                             "TEGH"))),
+                pattern_spacing = case_when(deposit_score_WH01 > 2 ~ ">2 star",
+                                            .default = "≤2 star")) %>%
   dplyr::group_by(likely_interval) %>%
   dplyr::arrange(likely_interval, desc(deposit_score_WH01), glaciation, .by_group = TRUE) %>%
   dplyr::mutate(deposit_name = forcats::as_factor(deposit_name)) %>%
-  ggplot(
-    aes(
-      x = deposit_name,
-      y = compilation,
-      fill = glaciation,
-      pattern_spacing = pattern_spacing
-    )
-  ) +
-  geom_tile_pattern(
-    colour = "grey25",
-    pattern_size = 0.1,
-    pattern = "stripe",
-    pattern_angle = 45,
-    pattern_fill = "white",
-    pattern_colour = "white"
-  ) +
+  ggplot(aes(x = deposit_name,
+             y = compilation,
+             fill = glaciation,
+             pattern_spacing = pattern_spacing)) +
+  geom_tile_pattern(colour = "grey25",
+                    pattern_size = 0.1,
+                    pattern = "stripe",
+                    pattern_angle = 45,
+                    pattern_fill = "white",
+                    pattern_colour = "white") +
   scale_x_discrete(position = "top", limits = rev) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_pattern_spacing_discrete(
-    breaks = c(">2 star", "≤2 star"),
-    range = c(5, 0.01)
-  ) +
+  scale_pattern_spacing_discrete(breaks = c(">2 star", "≤2 star"), range = c(5, 0.01)) +
   scale_fill_viridis_d(option = "turbo", na.value = "grey50") +
-  labs(
-    x = "Deposit name",
-    y = "Compilation",
-    fill = "Interval",
-    pattern_spacing = "Star rating"
-  ) +
+  labs(x = "Deposit name",
+       y = "Compilation",
+       fill = "Interval",
+       pattern_spacing = "Star rating") +
   theme_graph +
-  theme(
-    plot.margin = margin(1, 20, 1, 1, "pt"),
-    panel.grid = element_blank(),
-    axis.title = element_text(size = 28 / .pt),
-    axis.text.y = element_text(size = 24 / .pt),
-    axis.text.x = element_text(size = 14 / .pt, angle = 60, hjust = 0, vjust = 0.3),
-    legend.title = element_text(size = 24 / .pt),
-    legend.text = element_text(size = 20 / .pt),
-    legend.box = "vertical",
-    legend.position = "bottom",
-    legend.justification.bottom = "right",
-    legend.direction = "horizontal"
-  ) +
-  guides(
-    fill = guide_legend(override.aes = list(pattern_spacing = 5)),
-    pattern_spacing = guide_legend(nrow = 1)
-  )
+  theme(plot.margin = margin(1, 20, 1, 1, "pt"),
+        panel.grid = element_blank(),
+        axis.title = element_text(size = 28 / .pt),
+        axis.text.y = element_text(size = 24 / .pt),
+        axis.text.x = element_text(size = 14 / .pt, angle = 60, hjust = 0, vjust = 0.3),
+        legend.title = element_text(size = 24 / .pt),
+        legend.text = element_text(size = 20 / .pt),
+        legend.box = "vertical",
+        legend.position = "bottom",
+        legend.justification.bottom = "right",
+        legend.direction = "horizontal") +
+  guides(fill = guide_legend(override.aes = list(pattern_spacing = 5)),
+         pattern_spacing = guide_legend(nrow = 1))
 
 if (isTRUE(plot_show)) {
   print(plot_fig1_compilation_deposits)
 }
 
 if (isTRUE(plot_save)) {
-  png(
-    file = file.path(dir_plots, "fig_1_compilation_deposits_score.png"),
-    width = 165.1,
-    height = 140,
-    units = "mm",
-    bg = "white",
-    res = 600
-  )
+  # hi-res png
+  png(file = file.path(dir_plots, "fig_1_compilation_deposits_score.png"),
+      width = 165.1,
+      height = 140,
+      units = "mm",
+      bg = "white",
+      res = 1200)
+  print(plot_fig1_compilation_deposits)
+  dev.off()
+  
+  # pdf 
+  pdf(file = file.path(dir_plots, "fig_1_compilation_deposits_score.pdf"),
+      width = 6.5,
+      height = 5.51,
+      bg = "white")
   print(plot_fig1_compilation_deposits)
   dev.off()
 }
@@ -520,19 +513,17 @@ if (isTRUE(plot_save)) {
 ## sort data ----
 data_deposits_fig2 <- data_deposits %>%
   dplyr::ungroup() %>%
-  dplyr::select(
-    deposit_name,
-    deposit_score_WH01,
-    likely_interval,
-    alf,
-    constraint_wrt_csl,
-    constraint_position,
-    constraint_type,
-    constraint_date_type,
-    constraint_date_system,
-    constraint_age_ma,
-    constraint_age_ma_unc
-  ) %>%
+  dplyr::select(deposit_name,
+                deposit_score_WH01,
+                likely_interval,
+                alf,
+                constraint_wrt_csl,
+                constraint_position,
+                constraint_type,
+                constraint_date_type,
+                constraint_date_system,
+                constraint_age_ma,
+                constraint_age_ma_unc) %>%
   dplyr::filter(
     # remove entries with no age constraint (shouldn't be any in the dataset but just to be sure)
     !is.na(constraint_age_ma),
@@ -547,143 +538,89 @@ data_deposits_fig2 <- data_deposits %>%
   ) %>%
   dplyr::mutate(
     # merge "Cambrian" with "uncertain" deposits
-    likely_interval = ordered(
-      case_when(
-        likely_interval == "Cambrian" ~ "uncertain",
-        .default = likely_interval
-      ),
-      levels = c("uncertain", "Ediacaran", "MEIH", "LEGH", "LEIH", "TEGH")
-    ),
+    likely_interval = ordered(case_when(likely_interval == "Cambrian" ~ "uncertain",
+                                        .default = likely_interval),
+                              levels = c("uncertain", "Ediacaran", "MEIH", "LEGH", "LEIH", "TEGH")),
     # add a new variable for colour in the plots reflecting the dating method
-    plot_colour_date_type = ordered(
-      case_when(
-        constraint_type == "Radiometric date" ~ paste0("Radiometric: ", constraint_date_system),
-        # constraint_type == "CIE" ~ "Shuram CIE",
-        .default = constraint_type
-      ),
-      levels = c(
-        "Radiometric: U-Pb", "Radiometric: Re-Os", "Radiometric: Pb-Pb", "Radiometric: Ar-Ar",
-        "Biostratigraphy", "Correlation",
-        # "Shuram CIE"
-        "CIE"
-      )
-    ),
-    plot_shape_constraint = ordered(
-      constraint_wrt_csl,
-      levels = c("maximum", "deposition", "minimum")
-    )
-  )
+    plot_colour_date_type = ordered(case_when(constraint_type == "Radiometric date" ~ paste0("Radiometric: ", constraint_date_system),
+                                              # constraint_type == "CIE" ~ "Shuram CIE",
+                                              .default = constraint_type),
+                                    levels = c("Radiometric: U-Pb", "Radiometric: Re-Os", "Radiometric: Pb-Pb", "Radiometric: Ar-Ar",
+                                               "Biostratigraphy", "Correlation",
+                                               # "Shuram CIE"
+                                               "CIE")),
+    plot_shape_constraint = ordered(constraint_wrt_csl,
+                                    levels = c("maximum", "deposition", "minimum")))
 
 # recalculate min/max age constraints
 data_ages_minmax_fig2 <- data_deposits_fig2 %>%
   # calculate each age with analytical uncertainty where relevant
-  dplyr::mutate(
-    age_ma_min_unc = ifelse(
-      !is.na(constraint_age_ma - constraint_age_ma_unc),
-      constraint_age_ma - constraint_age_ma_unc,
-      constraint_age_ma
-    ),
-    age_ma_max_unc = ifelse(
-      !is.na(constraint_age_ma + constraint_age_ma_unc),
-      constraint_age_ma + constraint_age_ma_unc,
-      constraint_age_ma
-    )
-  ) %>%
+  dplyr::mutate(age_ma_min_unc = ifelse(!is.na(constraint_age_ma - constraint_age_ma_unc),
+                                        constraint_age_ma - constraint_age_ma_unc,
+                                        constraint_age_ma),
+                age_ma_max_unc = ifelse(!is.na(constraint_age_ma + constraint_age_ma_unc),
+                                        constraint_age_ma + constraint_age_ma_unc,
+                                        constraint_age_ma)) %>%
   dplyr::ungroup() %>%
-  dplyr::group_by(
-    deposit_name,
-    deposit_score_WH01,
-    likely_interval,
-    alf
-  ) %>%
-  dplyr::summarise(
-    plot_date_max = dplyr::case_when(
-      !is.infinite(min(constraint_age_ma[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE)) ~ min(constraint_age_ma[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE),
-      .default = 1000
-    ),
+  dplyr::group_by(deposit_name,
+                  deposit_score_WH01,
+                  likely_interval,
+                  alf) %>%
+  dplyr::summarise(plot_date_max = dplyr::case_when(
+    !is.infinite(min(constraint_age_ma[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE)) ~ min(constraint_age_ma[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE),
+    .default = 1000),
     plot_date_max_unc = dplyr::case_when(
       !is.infinite(min(age_ma_max_unc[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE)) ~ min(age_ma_max_unc[plot_shape_constraint == "deposition" | plot_shape_constraint == "maximum"], na.rm = TRUE),
-      .default = 1000
-    ),
+      .default = 1000),
     plot_date_min = dplyr::case_when(
       !is.infinite(max(constraint_age_ma[plot_shape_constraint == "minimum"], na.rm = TRUE)) ~ max(constraint_age_ma[plot_shape_constraint == "minimum"], na.rm = TRUE),
-      .default = 0
-    ),
+      .default = 0),
     plot_date_min_unc = dplyr::case_when(
       !is.infinite(max(age_ma_min_unc[plot_shape_constraint == "minimum"], na.rm = TRUE)) ~ max(age_ma_min_unc[plot_shape_constraint == "minimum"], na.rm = TRUE),
-      .default = 0
-    ),
-    .groups = "keep"
-  )
+      .default = 0),
+    .groups = "keep")
 
 ## order deposits by maximum age constraint ----
 data_deposits_fig2 <- data_deposits_fig2 %>%
-  dplyr::mutate(
-    deposit_name = ordered(
-      deposit_name,
-      levels = unique(data_ages_minmax$deposit_name[
-        order(-data_ages_minmax$alf,
-          -data_ages_minmax$deposit_score_WH01,
-          data_ages_minmax$plot_date_max,
-          decreasing = TRUE
-        )
-      ])
-    )
-  )
+  dplyr::mutate(deposit_name = ordered(
+    deposit_name,
+    levels = unique(data_ages_minmax$deposit_name[order(-data_ages_minmax$alf,
+                                                        -data_ages_minmax$deposit_score_WH01,
+                                                        data_ages_minmax$plot_date_max,
+                                                        decreasing = TRUE)])))
 
 data_scores_fig2 <- data_deposits_fig2 %>%
   dplyr::distinct(deposit_name, deposit_score_WH01, alf, likely_interval)
 
 ### plot figure 2 scores ----
-plot_fig2_deposit_scores <- ggplot(
-  data = data_scores_fig2,
-  aes(
-    x = deposit_score_WH01,
-    y = deposit_name
-  )
-) +
+plot_fig2_deposit_scores <- ggplot(data = data_scores_fig2,
+                                   aes(x = deposit_score_WH01, y = deposit_name)) +
   geom_col(aes(alpha = alf),
-    fill = "steelblue"
-  ) +
-  geom_vline(
-    xintercept = 2,
-    linetype = "dashed",
-    colour = "grey50"
-  ) +
-  scale_alpha_identity(
-    guide = "none"
-  ) +
-  scale_y_discrete(
-    name = "Candidate glacial deposits",
-    expand = expansion(add = 0.45)
-  ) +
-  scale_x_reverse(
-    name = "Star\nrating",
-    limits = c(5, 0),
-    breaks = seq(from = 5, to = 0, by = -1),
-    expand = expansion(add = c(0.1, 0.1))
-  ) +
+           fill = "steelblue") +
+  geom_vline(xintercept = 2, linetype = "dashed", colour = "grey50") +
+  scale_alpha_identity(guide = "none") +
+  scale_y_discrete(name = "Candidate glacial deposits", expand = expansion(add = 0.45)) +
+  scale_x_reverse(name = "Star\nrating",
+                  limits = c(5, 0),
+                  breaks = seq(from = 5, to = 0, by = -1),
+                  expand = expansion(add = c(0.1, 0.1))) +
   facet_grid(fct_rev(likely_interval) ~ .,
-    scales = "free_y",
-    space = "free_y",
-    drop = TRUE
-  ) +
+             scales = "free_y",
+             space = "free_y",
+             drop = TRUE) +
   theme_bw() +
-  theme(
-    strip.background = element_blank(),
-    strip.text = element_blank(),
-    axis.title = element_text(size = 8),
-    axis.text.x = element_text(size = 6),
-    axis.text.y = element_text(
-      angle = 0,
-      vjust = 0.3,
-      hjust = 1,
-      size = 6
-    ),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    plot.margin = unit(c(0, 0, 0, 0.5), "cm")
-  )
+  theme(strip.background = element_blank(),
+        strip.text = element_blank(),
+        axis.title = element_text(size = 8),
+        axis.text.x = element_text(size = 6),
+        axis.text.y = element_text(
+          angle = 0,
+          vjust = 0.3,
+          hjust = 1,
+          size = 6),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        plot.margin = unit(c(0, 0, 0, 0.5), "cm"))
 
 if (isTRUE(plot_show)) {
   print(plot_fig2_deposit_scores)
@@ -692,38 +629,28 @@ if (isTRUE(plot_show)) {
 ### plot figure 2 dates ----
 plot_fig2_deposit_dates <- ggplot() +
   # annotate with icehouse intervals
-  geom_rect(
-    data = ecesd_glaciations,
-    aes(
-      xmin = Age_min,
-      xmax = Age_max,
-      ymin = -Inf,
-      ymax = Inf
-    ),
-    alpha = 0.3,
-    fill = "steelblue",
-    colour = "steelblue"
-  ) +
+  geom_rect(data = ecesd_glaciations,
+            aes(xmin = Age_min,
+                xmax = Age_max,
+                ymin = -Inf,
+                ymax = Inf),
+            alpha = 0.3,
+            fill = "steelblue",
+            colour = "steelblue") +
   # annotate with E-C boundary
-  geom_vline(
-    xintercept = c(538.8, 635),
-    linetype = "dashed",
-    colour = "grey50"
-  ) +
+  geom_vline(xintercept = c(538.8, 635),
+             linetype = "dashed",
+             colour = "grey50") +
   # add solid line between min and max age ranges
-  geom_linerange(
-    data = data_ages_minmax_fig2,
-    aes(
-      y = deposit_name,
-      xmin = plot_date_min_unc,
-      xmax = plot_date_max_unc,
-      alpha = alf
-    ),
-    position = "identity",
-    linetype = "solid",
-    linewidth = 1,
-    colour = "black"
-  ) +
+  geom_linerange(data = data_ages_minmax_fig2,
+                 aes(y = deposit_name,
+                     xmin = plot_date_min_unc,
+                     xmax = plot_date_max_unc,
+                     alpha = alf),
+                 position = "identity",
+                 linetype = "solid",
+                 linewidth = 1,
+                 colour = "black") +
   # add error bars for geom_point
   # geom_errorbarh(
   #   data = data_deposits_fig2,
@@ -739,142 +666,120 @@ plot_fig2_deposit_dates <- ggplot() +
   #   position = position_dodge(width = 1),
   #   linewidth = 0.5
   # ) +
-  geom_linerange(
-    data = data_deposits_fig2,
-    aes(
-      x = constraint_age_ma,
-      y = deposit_name,
-      xmin = constraint_age_ma - constraint_age_ma_unc,
-      xmax = constraint_age_ma + constraint_age_ma_unc,
-      colour = plot_colour_date_type,
-      alpha = alf,
-      group = deposit_name
-    ),
-    # position = position_dodge2(width = 0.75),
-    linewidth = 0.5
-  ) +
+  geom_linerange(data = data_deposits_fig2,
+                 aes(x = constraint_age_ma,
+                     y = deposit_name,
+                     xmin = constraint_age_ma - constraint_age_ma_unc,
+                     xmax = constraint_age_ma + constraint_age_ma_unc,
+                     colour = plot_colour_date_type,
+                     alpha = alf,
+                     group = deposit_name),
+                 # position = position_dodge2(width = 0.75),
+                 linewidth = 0.5) +
   # add individual dates as points
-  geom_point(
-    data = data_deposits_fig2,
-    aes(
-      x = constraint_age_ma,
-      y = deposit_name,
-      shape = plot_shape_constraint,
-      colour = plot_colour_date_type,
-      alpha = alf,
-      group = deposit_name
-    ),
-    # position = position_dodge2(width = 0.75),
-    size = 3,
-    stroke = 1,
-  ) +
+  geom_point(data = data_deposits_fig2,
+             aes(x = constraint_age_ma,
+                 y = deposit_name,
+                 shape = plot_shape_constraint,
+                 colour = plot_colour_date_type,
+                 alpha = alf,
+                 group = deposit_name),
+             # position = position_dodge2(width = 0.75),
+             size = 3,
+             stroke = 1,) +
   # add an empty geom_col to align with score columns when panel plotting
-  geom_col(
-    data = data_deposits_fig2,
-    aes(
-      x = 0,
-      y = deposit_name
-    )
-  ) +
-  scale_shape_manual(
-    values = c(
-      "maximum" = -9658, # 24,
-      "deposition" = 18,
-      "minimum" = -9668 # 25
-    ),
-    na.value = NA,
-    breaks = c("maximum", "deposition", "minimum", NA)
-  ) +
-  scale_colour_viridis_d(
-    option = "turbo",
-    begin = 0.1,
-    end = 0.9,
-    direction = -1,
-    na.value = "grey25"
-  ) +
-  scale_alpha_identity(
-    guide = "none"
-  ) +
+  geom_col(data = data_deposits_fig2, aes(x = 0, y = deposit_name)) +
+  scale_shape_manual(values = c("maximum" = -9658, # 24,
+                                "deposition" = 18,
+                                "minimum" = -9668 # 25
+                                ),     
+                     na.value = NA,
+                     breaks = c("maximum", "deposition", "minimum", NA)) +
+  scale_colour_viridis_d(option = "turbo",
+                         begin = 0.1,
+                         end = 0.9,
+                         direction = -1,
+                         na.value = "grey25") +
+  scale_alpha_identity(guide = "none") +
   # add scale_x expansion to allow alignment with geom_col below
   scale_y_discrete(expand = expansion(add = 2)) +
   scale_x_reverse(
     breaks = seq(from = min(plot_age_lims - 10), to = max(plot_age_lims), by = 20),
     expand = expansion(add = 2)
   ) +
-  labs(
-    x = "Age (Ma)",
-    y = "Candidate glacial deposits",
-    shape = "Date position",
-    colour = "Date type"
-  ) +
-  coord_geo(
-    pos = "top",
-    height = unit(1, "line"),
-    dat = ECESD_dt_MS1F1,
-    xlim = plot_age_lims
-  ) +
+  labs(x = "Age (Ma)",
+       y = "Candidate glacial deposits",
+       shape = "Date position",
+       colour = "Date type") +
+  coord_geo(pos = "top",
+            height = unit(1, "line"),
+            dat = ECESD_dt_MS1F1,
+            xlim = plot_age_lims) +
   facet_grid(fct_rev(likely_interval) ~ .,
-    scales = "free_y",
-    space = "free_y",
-    drop = TRUE
-  ) +
-  guides(
-    shape = guide_legend(order = 1),
-    colour = guide_legend(nrow = 3, order = 2) # byrow = TRUE
-  ) +
+             scales = "free_y",
+             space = "free_y",
+             drop = TRUE) +
+  guides(shape = guide_legend(order = 1),
+         colour = guide_legend(nrow = 3, order = 2) # byrow = TRUE
+         ) +
   theme_bw() +
   # theme edited to work with panel plot
   # remove x-axis details and sort plot margins
-  theme(
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    axis.ticks.length.y = unit(0, "cm"),
-    axis.title.x = element_text(size = 8),
-    axis.text.x = element_text(size = 6),
-    strip.background = element_blank(),
-    strip.text.y = element_text(size = 6, angle = 0, hjust = 0, colour = "black", face = "bold"),
-    plot.margin = unit(c(0.5, 0, 0, 0), "cm"),
-    panel.grid.major.x = element_blank(),
-    panel.grid.minor.x = element_blank(),
-    legend.direction = "horizontal",
-    legend.box = "vertical",
-    legend.box.just = "left",
-    legend.box.spacing = unit(1, "pt"),
-    legend.position = "bottom",
-    legend.justification.bottom = "left",
-    legend.spacing.x = unit(0, "pt"),
-    legend.spacing.y = unit(0, "pt"),
-    legend.background = element_rect(fill = "white", colour = NA),
-    legend.title = element_text(size = 8),
-    legend.text = element_text(size = 6, margin = margin(0, 0, 0, 0)),
-    legend.margin = margin(0, 0, 0, 0, unit = "pt")
-  )
+  theme(axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        axis.ticks.length.y = unit(0, "cm"),
+        axis.title.x = element_text(size = 8),
+        axis.text.x = element_text(size = 6),
+        strip.background = element_blank(),
+        strip.text.y = element_text(size = 6, angle = 0, hjust = 0, colour = "black", face = "bold"),
+        plot.margin = unit(c(0.5, 0, 0, 0), "cm"),
+        panel.grid.major.x = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        legend.direction = "horizontal",
+        legend.box = "vertical",
+        legend.box.just = "left",
+        legend.box.spacing = unit(1, "pt"),
+        legend.position = "bottom",
+        legend.justification.bottom = "left",
+        legend.spacing.x = unit(0, "pt"),
+        legend.spacing.y = unit(0, "pt"),
+        legend.background = element_rect(fill = "white", colour = NA),
+        legend.title = element_text(size = 8),
+        legend.text = element_text(size = 6, margin = margin(0, 0, 0, 0)),
+        legend.margin = margin(0, 0, 0, 0, unit = "pt"))
+
 # have a check
 if (isTRUE(plot_show)) {
   print(plot_fig2_deposit_dates)
 }
 
 ### combine figure 2 as panel plot ----
-plot_fig2_panel <- ggarrange(
-  plot_fig2_deposit_scores,
-  plot_fig2_deposit_dates,
-  ncol = 2,
-  align = "h",
-  widths = c(0.5, 1)
-)
+plot_fig2_panel <- ggarrange(plot_fig2_deposit_scores,
+                             plot_fig2_deposit_dates,
+                             ncol = 2,
+                             align = "h",
+                             widths = c(0.5, 1))
+
 if (isTRUE(plot_show)) {
   plot_fig2_panel
 }
 
 if (isTRUE(plot_save)) {
-  png(
-    file = file.path(dir_plots, "fig_2_deposits_dates_scores.png"),
-    width = 159,
-    height = 210,
-    units = "mm",
-    bg = "white",
-    res = 600
-  )
+  # hi-res png 
+  png(file = file.path(dir_plots, "fig_2_deposits_dates_scores.png"),
+      width = 159,
+      height = 210,
+      units = "mm",
+      bg = "white",
+      res = 1200)
+  print(plot_fig2_panel)
+  dev.off()
+  
+  # pdf
+  pdf(file = file.path(dir_plots, "fig_2_deposits_dates_scores.pdf"),
+      width = 6.26,
+      height = 8.27,
+      bg = "white")
   print(plot_fig2_panel)
   dev.off()
 }
@@ -884,28 +789,22 @@ if (isTRUE(plot_save)) {
 ## sort data for figures S2 and S3 radiometric date distributions ----
 ### subset ----
 data_for_pdf <- data_deposits_fig2 %>%
-  dplyr::left_join(
-    .,
-    unique(data_deposits[c("deposit_name", "craton")]),
-    by = join_by(deposit_name)
-  ) %>%
-  dplyr::filter(
-    !is.na(constraint_age_ma),
-    !is.na(constraint_age_ma_unc),
-    constraint_type == "Radiometric date",
-    deposit_score_WH01 > 2,
-    likely_interval == "MEIH" |
-      likely_interval == "LEIH"
-  ) %>%
-  dplyr::select(
-    deposit_name,
-    deposit_score_WH01,
-    craton,
-    likely_interval,
-    constraint_wrt_csl,
-    constraint_age_ma,
-    constraint_age_ma_unc
-  ) %>%
+  dplyr::left_join(.,
+                   unique(data_deposits[c("deposit_name", "craton")]),
+                   by = join_by(deposit_name)) %>%
+  dplyr::filter(!is.na(constraint_age_ma),
+                !is.na(constraint_age_ma_unc),
+                constraint_type == "Radiometric date",
+                deposit_score_WH01 > 2,
+                likely_interval == "MEIH" |
+                  likely_interval == "LEIH") %>%
+  dplyr::select(deposit_name,
+                deposit_score_WH01,
+                craton,
+                likely_interval,
+                constraint_wrt_csl,
+                constraint_age_ma,
+                constraint_age_ma_unc) %>%
   dplyr::mutate(
     date_id = paste0(deposit_name, "_", constraint_age_ma, "_", constraint_age_ma_unc)
   )
@@ -921,134 +820,111 @@ for (i in 1:nrow(data_for_pdf)) {
 
 ### format for plots ----
 data_dates_pdfs_figS2 <- data_dates_pdfs %>%
-  tidyr::pivot_longer(
-    .,
-    cols = !age_range,
-    names_to = "date_id",
-    values_to = "date_pdf"
-  ) %>%
+  tidyr::pivot_longer(.,
+                      cols = !age_range,
+                      names_to = "date_id",
+                      values_to = "date_pdf") %>%
   dplyr::filter(date_pdf > 0) %>%
-  dplyr::left_join(
-    .,
-    data_for_pdf,
-    by = join_by(date_id)
-  ) %>%
-  dplyr::mutate(
-    likely_interval = as.character(likely_interval),
-    constraint_wrt_csl = ordered(
-      constraint_wrt_csl,
-      levels = c("maximum", "deposition", "minimum")
-    )
-  )
+  dplyr::left_join(.,
+                   data_for_pdf,
+                   by = join_by(date_id)) %>%
+  dplyr::mutate(likely_interval = as.character(likely_interval),
+                constraint_wrt_csl = ordered(
+                  constraint_wrt_csl,
+                  levels = c("maximum", "deposition", "minimum")))
 
-data_intervals <- data.frame(
-  likely_interval = c("MEIH", "LEIH"),
-  xmin = c(579, 550),
-  xmax = c(595, 565),
-  ymin = -Inf,
-  ymax = Inf
-) %>%
-  dplyr::right_join(
-    .,
-    unique(droplevels(data_for_pdf[c("deposit_name", "likely_interval", "craton", "constraint_age_ma")])),
-    by = join_by(likely_interval)
-  )
+data_intervals <- data.frame(likely_interval = c("MEIH", "LEIH"),
+                             xmin = c(579, 550),
+                             xmax = c(595, 565),
+                             ymin = -Inf,
+                             ymax = Inf) %>%
+  dplyr::right_join(.,
+                    unique(droplevels(data_for_pdf[c("deposit_name", "likely_interval", "craton", "constraint_age_ma")])),
+                    by = join_by(likely_interval))
 
 
 ## plot figure S2 date pdfs by deposit ----
 plot_figS2_radiometric_constraints_deposit <- ggplot() +
   theme_minimal() +
-  theme(
-    axis.title.x = element_text(face = "bold", size = 28 / .pt),
-    axis.text.x = element_text(face = "plain", size = 24 / .pt),
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    strip.background = element_rect(colour = NA),
-    ggh4x.facet.nestline = element_line(colour = "grey25"),
-    legend.title = element_text(face = "bold", size = 28 / .pt),
-    legend.text = element_text(face = "plain", size = 24 / .pt),
-    legend.position = "bottom",
-    legend.justification.bottom = "right"
-  ) +
+  theme(axis.title.x = element_text(face = "bold", size = 28 / .pt),
+        axis.text.x = element_text(face = "plain", size = 24 / .pt),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        strip.background = element_rect(colour = NA),
+        ggh4x.facet.nestline = element_line(colour = "grey25"),
+        legend.title = element_text(face = "bold", size = 28 / .pt),
+        legend.text = element_text(face = "plain", size = 24 / .pt),
+        legend.position = "bottom",
+        legend.justification.bottom = "right") +
   scale_x_reverse(limits = plot_age_lims, name = "Age (Ma)") +
   scale_y_continuous() +
   deeptime::coord_geo(height = unit(1, "line"), size = 8 / .pt) +
-  facet_nested(
-    ordered(likely_interval, levels = c("LEIH", "MEIH")) +
-      forcats::fct_reorder(ordered(deposit_name), constraint_age_ma, .fun = max) ~ .,
-    switch = "y",
-    scales = "free_y",
-    strip = strip_nested(
-      size = "variable", # as interval names are shorter than deposit names
-      text_y = list(
-        element_text(face = "bold", angle = 90, size = 28 / .pt),
-        element_text(face = "plain", angle = 0, size = 24 / .pt, hjust = 1)
-      ),
-      by_layer_y = TRUE
-    )
-  ) +
-  geom_rect_pattern(
-    data = data_intervals,
-    aes(
-      xmin = xmin,
-      xmax = xmax,
-      ymin = ymin,
-      ymax = ymax,
-      pattern_angle = likely_interval
-    ),
-    pattern = "stripe",
-    pattern_fill = "white",
-    pattern_colour = NA,
-    pattern_spacing = 0.5,
-    colour = NA,
-    fill = "slategray2"
-  ) +
+  facet_nested(ordered(likely_interval, levels = c("LEIH", "MEIH")) +
+                 forcats::fct_reorder(ordered(deposit_name), constraint_age_ma, .fun = max) ~ .,
+               switch = "y",
+               scales = "free_y",
+               strip = strip_nested(size = "variable", # as interval names are shorter than deposit names
+                                    text_y = list(
+                                      element_text(face = "bold", angle = 90, size = 28 / .pt),
+                                      element_text(face = "plain", angle = 0, size = 24 / .pt, hjust = 1)),
+                                    by_layer_y = TRUE)) +
+  geom_rect_pattern(data = data_intervals,
+                    aes(xmin = xmin,
+                        xmax = xmax,
+                        ymin = ymin,
+                        ymax = ymax,
+                        pattern_angle = likely_interval),
+                    pattern = "stripe",
+                    pattern_fill = "white",
+                    pattern_colour = NA,
+                    pattern_spacing = 0.5,
+                    colour = NA,
+                    fill = "slategray2") +
   scale_pattern_angle_discrete(name = "Intervals:", breaks = c("MEIH", "LEIH"), range = c(45, 135)) +
   guides(pattern_angle = guide_legend(override.aes = list(pattern_spacing = 0.03))) +
   ggnewscale::new_scale_colour() +
   geom_hline(yintercept = 0, colour = "grey10") +
-  geom_area(
-    data = data_dates_pdfs_figS2,
-    aes(
-      x = age_range,
-      y = date_pdf,
-      colour = date_id,
-      fill = constraint_wrt_csl
-    ),
-    alpha = 0.5,
-    position = "identity",
-    orientation = "x"
-  ) +
+  geom_area(data = data_dates_pdfs_figS2,
+            aes(x = age_range,
+                y = date_pdf,
+                colour = date_id,
+                fill = constraint_wrt_csl),
+            alpha = 0.5,
+            position = "identity",
+            orientation = "x") +
   scale_colour_manual(values = rep("black", nrow(data_dates_pdfs_figS2)), guide = "none") +
   ggnewscale::new_scale_colour() +
-  geom_vline(
-    data = data_dates_pdfs_figS2,
-    aes(xintercept = constraint_age_ma, colour = constraint_wrt_csl),
-    linewidth = 2
-  ) +
-  scale_colour_viridis_d(
-    option = "turbo",
-    begin = 0,
-    end = 0.9,
-    name = "Constraint:",
-    aesthetics = c("colour", "fill")
-  )
+  geom_vline(data = data_dates_pdfs_figS2,
+             aes(xintercept = constraint_age_ma, colour = constraint_wrt_csl),
+             linewidth = 2) +
+  scale_colour_viridis_d(option = "turbo",
+                         begin = 0,
+                         end = 0.9,
+                         name = "Constraint:",
+                         aesthetics = c("colour", "fill"))
 
 if (isTRUE(plot_show)) {
   print(plot_figS2_radiometric_constraints_deposit)
 }
 
 if (isTRUE(plot_save)) {
-  png(
-    file = file.path(dir_plots, "fig_S2_radiometric_constraints_distribution_deposits.png"),
-    width = 158.7,
-    height = 180,
-    units = "mm",
-    bg = "white",
-    res = 600
-  )
+  # hi-res png
+  png(file = file.path(dir_plots, "fig_S2_radiometric_constraints_distribution_deposits.png"),
+      width = 158.7,
+      height = 180,
+      units = "mm",
+      bg = "white",
+      res = 1200)
+  print(plot_figS2_radiometric_constraints_deposit)
+  dev.off()
+  
+  # pdf
+  pdf(file = file.path(dir_plots, "fig_S2_radiometric_constraints_distribution_deposits.pdf"),
+      width = 6.25,
+      height = 7.09,
+      bg = "white")
   print(plot_figS2_radiometric_constraints_deposit)
   dev.off()
 }
@@ -1056,97 +932,84 @@ if (isTRUE(plot_save)) {
 ## plot figure S3 date pdfs by craton ----
 plot_figS3_radiometric_constraints_craton <- ggplot() +
   theme_minimal() +
-  theme(
-    axis.title.x = element_text(face = "bold", size = 28 / .pt),
-    axis.text.x = element_text(face = "plain", size = 24 / .pt),
-    axis.title.y = element_blank(),
-    axis.text.y = element_blank(),
-    panel.grid.major.y = element_blank(),
-    panel.grid.minor.y = element_blank(),
-    strip.background = element_rect(colour = NA),
-    ggh4x.facet.nestline = element_line(colour = "grey25"),
-    legend.title = element_text(face = "bold", size = 28 / .pt),
-    legend.text = element_text(face = "plain", size = 24 / .pt),
-    legend.position = "bottom",
-    legend.justification.bottom = "right"
-  ) +
+  theme(axis.title.x = element_text(face = "bold", size = 28 / .pt),
+        axis.text.x = element_text(face = "plain", size = 24 / .pt),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        strip.background = element_rect(colour = NA),
+        ggh4x.facet.nestline = element_line(colour = "grey25"),
+        legend.title = element_text(face = "bold", size = 28 / .pt),
+        legend.text = element_text(face = "plain", size = 24 / .pt),
+        legend.position = "bottom",
+        legend.justification.bottom = "right") +
   scale_x_reverse(limits = plot_age_lims, name = "Age (Ma)") +
   scale_y_continuous() +
   deeptime::coord_geo(height = unit(1, "line"), size = 8 / .pt) +
-  facet_nested(
-    ordered(likely_interval, levels = c("LEIH", "MEIH")) +
-      forcats::fct_reorder(ordered(craton), constraint_age_ma, .fun = max) ~ .,
-    switch = "y",
-    scales = "free_y",
-    strip = strip_nested(
-      size = "variable", # as interval names are shorter than deposit names
-      text_y = list(
-        element_text(face = "bold", angle = 90, size = 28 / .pt),
-        element_text(face = "plain", angle = 0, size = 24 / .pt, hjust = 1)
-      ),
-      by_layer_y = TRUE
-    )
-  ) +
-  geom_rect_pattern(
-    data = data_intervals,
-    aes(
-      xmin = xmin,
-      xmax = xmax,
-      ymin = ymin,
-      ymax = ymax,
-      pattern_angle = likely_interval
-    ),
-    pattern = "stripe",
-    pattern_fill = "white",
-    pattern_colour = NA,
-    pattern_spacing = 0.5,
-    colour = NA,
-    fill = "slategray2"
-  ) +
+  facet_nested(ordered(likely_interval, levels = c("LEIH", "MEIH")) +
+                 forcats::fct_reorder(ordered(craton), constraint_age_ma, .fun = max) ~ .,
+               switch = "y",
+               scales = "free_y",
+               strip = strip_nested(size = "variable", # as interval names are shorter than deposit names
+                                    text_y = list(element_text(face = "bold", angle = 90, size = 28 / .pt),
+                                                  element_text(face = "plain", angle = 0, size = 24 / .pt, hjust = 1)),
+                                    by_layer_y = TRUE)) +
+  geom_rect_pattern(data = data_intervals,
+                    aes(xmin = xmin,
+                        xmax = xmax,
+                        ymin = ymin,
+                        ymax = ymax,
+                        pattern_angle = likely_interval),
+                    pattern = "stripe",
+                    pattern_fill = "white",
+                    pattern_colour = NA,
+                    pattern_spacing = 0.5,
+                    colour = NA,
+                    fill = "slategray2") +
   scale_pattern_angle_discrete(name = "Intervals:", breaks = c("MEIH", "LEIH"), range = c(45, 135)) +
   guides(pattern_angle = guide_legend(override.aes = list(pattern_spacing = 0.03))) +
   ggnewscale::new_scale_colour() +
   geom_hline(yintercept = 0, colour = "grey10") +
-  geom_area(
-    data = data_dates_pdfs_figS2,
-    aes(
-      x = age_range,
-      y = date_pdf,
-      colour = date_id,
-      fill = constraint_wrt_csl
-    ),
-    alpha = 0.5,
-    position = "identity",
-    orientation = "x"
-  ) +
+  geom_area(data = data_dates_pdfs_figS2,
+            aes(x = age_range,
+                y = date_pdf,
+                colour = date_id,
+                fill = constraint_wrt_csl),
+            alpha = 0.5,
+            position = "identity",
+            orientation = "x") +
   scale_colour_manual(values = rep("black", nrow(data_dates_pdfs_figS2)), guide = "none") +
   ggnewscale::new_scale_colour() +
-  geom_vline(
-    data = data_dates_pdfs_figS2,
-    aes(xintercept = constraint_age_ma, colour = constraint_wrt_csl),
-    linewidth = 2
-  ) +
-  scale_colour_viridis_d(
-    option = "turbo",
-    begin = 0,
-    end = 0.9,
-    name = "Constraint:",
-    aesthetics = c("colour", "fill")
-  )
+  geom_vline(data = data_dates_pdfs_figS2,
+             aes(xintercept = constraint_age_ma, colour = constraint_wrt_csl),
+             linewidth = 2) +
+  scale_colour_viridis_d(option = "turbo",
+                         begin = 0,
+                         end = 0.9,
+                         name = "Constraint:",
+                         aesthetics = c("colour", "fill"))
 
 if (isTRUE(plot_show)) {
   print(plot_figS3_radiometric_constraints_craton)
 }
 
 if (isTRUE(plot_save)) {
-  png(
-    file = file.path(dir_plots, "fig_S3_radiometric_constraints_distribution_craton.png"),
-    width = 158.7,
-    height = 150,
-    units = "mm",
-    bg = "white",
-    res = 600
-  )
+  # hi-res png
+  png(file = file.path(dir_plots, "fig_S3_radiometric_constraints_distribution_craton.png"),
+      width = 158.7,
+      height = 150,
+      units = "mm",
+      bg = "white",
+      res = 1200)
+  print(plot_figS3_radiometric_constraints_craton)
+  dev.off()
+  
+  # pdf
+  pdf(file = file.path(dir_plots, "fig_S3_radiometric_constraints_distribution_craton.pdf"),
+      width = 6.25,
+      height = 5.91,
+      bg = "white")
   print(plot_figS3_radiometric_constraints_craton)
   dev.off()
 }
