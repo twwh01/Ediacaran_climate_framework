@@ -474,7 +474,7 @@ plot_fig1_compilation_deposits <- data_compilations_plot %>%
         panel.grid = element_blank(),
         axis.title = element_text(size = 28 / .pt),
         axis.text.y = element_text(size = 24 / .pt),
-        axis.text.x = element_text(size = 14 / .pt, angle = 60, hjust = 0, vjust = 0.3),
+        axis.text.x = element_text(size = 14 / .pt, angle = 60, hjust = 0, vjust = 0),
         legend.title = element_text(size = 24 / .pt),
         legend.text = element_text(size = 20 / .pt),
         legend.box = "vertical",
