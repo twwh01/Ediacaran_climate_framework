@@ -1,4 +1,5 @@
 .Rproj.user
+.Rhistory
 # exclude old versions
 old/
 # exclude the (very large) fossil figure
