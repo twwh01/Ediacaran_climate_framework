@@ -8,7 +8,7 @@ rm(list = ls())
 # user parameters ----
 plot_age_lims <- c(650, 510) # in Ma for reverse age axis
 shade_value <- 0.3
-plot_show <- FALSE
+plot_show <- TRUE
 plot_save <- TRUE
 
 ## set directory paths ----
@@ -446,8 +446,8 @@ plot_fig1_compilation_deposits <- data_compilations_plot %>%
                                                              "MEIH",
                                                              "LEIH",
                                                              "TEGH"))),
-                pattern_spacing = case_when(deposit_score_WH01 > 2 ~ ">2 star",
-                                            .default = "≤2 star")) %>%
+                pattern_spacing = case_when(deposit_score_WH01 > 2 ~ "circumstantial",
+                                            .default = "weak")) %>%
   dplyr::group_by(likely_interval) %>%
   dplyr::arrange(likely_interval, desc(deposit_score_WH01), glaciation, .by_group = TRUE) %>%
   dplyr::mutate(deposit_name = forcats::as_factor(deposit_name)) %>%
@@ -463,7 +463,9 @@ plot_fig1_compilation_deposits <- data_compilations_plot %>%
                     pattern_colour = "white") +
   scale_x_discrete(position = "top", limits = rev) +
   scale_y_discrete(expand = c(0, 0)) +
-  scale_pattern_spacing_discrete(breaks = c(">2 star", "≤2 star"), range = c(5, 0.01)) +
+  scale_pattern_spacing_discrete(breaks = c("circumstantial", "weak"), 
+                                 labels = c(expression("">2~"star"), expression(""<=2~"star")),
+                                 range = c(5, 0.01)) +
   scale_fill_viridis_d(option = "turbo", na.value = "grey50") +
   labs(x = "Deposit name",
        y = "Compilation",
