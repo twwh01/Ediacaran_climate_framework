@@ -1,5 +1,5 @@
 # Supplementary code for Ediacaran coupling of climate and biosphere dynamics
-This is the supplementary code for a manuscript that is currently in press at GSA Bulletin. 
+This is the supplementary code for a manuscript that is now published in GSA Bulletin: [https://doi.org/10.1130/B39047.1](https://doi.org/10.1130/B39047.1). 
 
 The preprint of the originally submitted version is available on EarthArXiv: [https://eartharxiv.org/repository/view/8749/](https://eartharxiv.org/repository/view/8749/).
 
